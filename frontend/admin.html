@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <h2>Admin Dashboard</h2>
+    <button onclick="showMarks()">View Marks</button>
+    <button onclick="showAddQuestions()">Add Questions</button>
+
+    <!-- Marks Section -->
+    <div id="marksSection" style="display: none;">
+      <h3>Users List and Scores</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Score</th>
+          </tr>
+        </thead>
+        <tbody id="user-list"></tbody>
+      </table>
+    </div>
+
+    <!-- Add Questions Section -->
+    <div id="addQuestionsSection" style="display: none;">
+      <h3>Add a Question</h3>
+      <form id="questionForm">
+        <input type="text" id="question" placeholder="Question" required><br>
+        <input type="text" id="option1" placeholder="Option 1" required><br>
+        <input type="text" id="option2" placeholder="Option 2" required><br>
+        <input type="text" id="option3" placeholder="Option 3" required><br>
+        <input type="text" id="option4" placeholder="Option 4" required><br>
+        <input type="number" id="correctOption" placeholder="Correct Option (0-3)" required><br>
+        <input type="text" id="topic" placeholder="Topic (e.g., JavaScript)" required><br>
+        <button type="submit">Add Question</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function showMarks() {
+      document.getElementById("marksSection").style.display = "block";
+      document.getElementById("addQuestionsSection").style.display = "none";
+      fetchScores();
+    }
+
+    function showAddQuestions() {
+      document.getElementById("addQuestionsSection").style.display = "block";
+      document.getElementById("marksSection").style.display = "none";
+    }
+
+    async function fetchScores() {
+      const response = await fetch("http://localhost:5000/api/score");
+      const users = await response.json();
+      const tbody = document.getElementById("user-list");
+      tbody.innerHTML = "";
+
+      users.forEach(user => {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${user.username}</td><td>${user.score}</td>`;
+        tbody.appendChild(row);
+      });
+    }
+
+    document.getElementById("questionForm").addEventListener("submit", async function(event) {
+      event.preventDefault();
+
+      const question = document.getElementById("question").value;
+      const options = [
+        document.getElementById("option1").value,
+        document.getElementById("option2").value,
+        document.getElementById("option3").value,
+        document.getElementById("option4").value
+      ];
+      const correctOption = parseInt(document.getElementById("correctOption").value);
+      const topic = document.getElementById("topic").value;
+
+      const response = await fetch("http://localhost:5000/api/questions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question, options, correctOption, topic })
+      });
+
+      if (response.ok) {
+        alert("Question added successfully!");
+        document.getElementById("questionForm").reset();
+      } else {
+        const data = await response.json();
+        alert("Failed to add question: " + data.message);
+      }
+    });
+  </script>
+</body>
+</html>

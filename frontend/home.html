@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Welcome to the Quiz App</h2>
+        <p>Are you a User or an Admin?</p>
+        
+        <button onclick="setRole('user')">User</button><br>
+        <button onclick="setRole('admin')">Admin</button>
+    </div>
+
+    <script>
+        function setRole(role) {
+            localStorage.setItem("role", role);
+            window.location.href = "login.html";
+        }
+    </script>
+</body>
+</html>

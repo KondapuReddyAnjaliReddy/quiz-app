@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Choose a Topic</h2>
+        <select id="topicSelect">
+            <option value="">Select a topic</option>
+        </select>
+        <button onclick="startQuiz()">Start Quiz</button>
+
+        <div id="quizContainer" style="display: none;">
+            <h3 id="questionText"></h3>
+            <div id="options" style="display: flex; flex-direction: column; gap: 12px; margin-top: 20px;"></div>
+
+            <button onclick="nextQuestion()">Next</button>
+        </div>
+    </div>
+
+    <script>
+        let currentQuestionIndex = 0;
+        let questions = [];
+        let score = 0;
+        let selectedTopic = "";
+
+        async function fetchTopics() {
+            const response = await fetch("http://localhost:5000/api/questions/topics");
+            const topics = await response.json();
+            const topicSelect = document.getElementById("topicSelect");
+
+            topics.forEach(topic => {
+                const option = document.createElement("option");
+                option.value = topic;
+                option.textContent = topic;
+                topicSelect.appendChild(option);
+            });
+        }
+
+        async function startQuiz() {
+            selectedTopic = document.getElementById("topicSelect").value;
+            if (!selectedTopic) {
+                alert("Please select a topic");
+                return;
+            }
+
+            const response = await fetch(`http://localhost:5000/api/questions/${selectedTopic}`);
+            questions = await response.json();
+
+            if (questions.length === 0) {
+                alert("No questions available for this topic.");
+                return;
+            }
+
+            document.getElementById("quizContainer").style.display = "block";
+            currentQuestionIndex = 0;
+            score = 0;
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const questionData = questions[currentQuestionIndex];
+            document.getElementById("questionText").textContent = questionData.question;
+            const optionsContainer = document.getElementById("options");
+            optionsContainer.innerHTML = "";
+
+            questionData.options.forEach((option, index) => {
+                const button = document.createElement("button");
+                button.textContent = option;
+                button.onclick = () => checkAnswer(index, questionData.correctOption);
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function checkAnswer(selectedIndex, correctIndex) {
+            if (selectedIndex === correctIndex) {
+                score++;
+            }
+            nextQuestion();
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                showQuestion();
+            } else {
+                alert(`Quiz finished! Your score: ${score}/${questions.length}`);
+                saveScore();
+            }
+        }
+
+        async function saveScore() {
+            const username = localStorage.getItem("username");
+            if (!username) {
+                alert("User not logged in.");
+                return;
+            }
+
+            await fetch("http://localhost:5000/api/score", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, score, topic: selectedTopic })
+            });
+
+            window.location.href = "home.html";
+        }
+
+        fetchTopics();
+    </script>
+</body>
+</html>

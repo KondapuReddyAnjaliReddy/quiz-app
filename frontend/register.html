@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Register</title>
+<link rel="stylesheet" href="styles.css">
+
+  </head>
+<body>
+  <h2 id="title">Register</h2>
+
+  <form id="registerForm">
+    <input type="text" id="username" placeholder="Username" required /><br>
+    <input type="password" id="password" placeholder="Password" required /><br>
+    <button type="submit">Register</button>
+  </form>
+
+  <script>
+    const role = localStorage.getItem("role");
+    const titleEl = document.getElementById("title");
+
+    if (!role || !["user", "admin"].includes(role)) {
+      titleEl.innerText = "Invalid role. Go back to home.";
+      alert("No valid role selected. Redirecting to home page.");
+      setTimeout(() => {
+        window.location.href = "home.html";
+      }, 2000);
+    } else {
+      titleEl.innerText = `Register as ${role.toUpperCase()}`;
+    }
+
+    document.getElementById("registerForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+
+      const endpoint =
+        role === "admin"
+          ? "http://localhost:5000/api/auth/register-admin"
+          : "http://localhost:5000/api/auth/register-user";
+
+      try {
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password })
+        });
+
+        const result = await response.json();
+        alert(result.message || result.error);
+
+        if (response.ok) {
+          window.location.href = "login.html"; // redirect after success
+        }
+      } catch (err) {
+        alert("Something went wrong. Please try again.");
+        console.error(err);
+      }
+    });
+  </script>
+</body>
+</html>
